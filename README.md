@@ -17,6 +17,12 @@ We want to take a different approach to plant care. Instead of routinely remindi
 
 The “Succulent Sitter” will utilize a Sensor-Cloud Architecture. All costly computing will be done on the computer driving the Lilygo T-Display and interfacing with the cloud for data analytics that allow us to make care predictions. The TTGO chip will also be controlling our peripherals such as the LEDs which will be used to display watering status and a buzzer which will sound every thirty minutes to deter bugs. As inputs the TTGO will take information from the access point connecting it to the cloud, a photoresistor to take in light exposure for further data processing, and a humidity and temperature sensor. The output on the display suggests different care tips based on the amount of watering and overall levels of sunlight, with the largest text on the display being a countdown to the next predicted watering day.
 
+## Deliverables
+- A device that detects the plant’s soil and light conditions to notify the plant owner through connection with AWS about the optimal watering time
+- An LED assortment that’s easy to spot from a distance that indicates the watering status of the plant
+- A display that offers helpful tips and a watering-day countdown, based on watering frequency statistics and overall sunlight intake
+- A buzzer that makes a sound every 30 minutes to deter pests from the succulent 
+
 ## Hardware Used
 
 | Component/Part                  | Quantity               |
@@ -29,9 +35,3 @@ The “Succulent Sitter” will utilize a Sensor-Cloud Architecture. All costly 
 | LEDs                            | 3 (1 red, 1 yellow, 1 green) |
 | Buzzer                          | 1                      |
 | Battery                         | 1                      |
-
-## Deliverables
-- A device that detects the plant’s soil and light conditions to notify the plant owner through connection with AWS about the optimal watering time
-- An LED assortment that’s easy to spot from a distance that indicates the watering status of the plant
-- A display that offers helpful tips and a watering-day countdown, based on watering frequency statistics and overall sunlight intake
-- A buzzer that makes a sound every 30 minutes to deter pests from the succulent 

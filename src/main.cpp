@@ -10,6 +10,10 @@
 #include "nvs_flash.h"
 #include "DHT20.h"
 
+// Server details
+const char serverAddress[] = "3.144.71.254"; // adjust with instance
+const int serverPort = 5000;
+
 // Getting everything started:
 // 1. start AWS instance in the webpage
 // 2. copy ssh line from the webpage and start it after replacing serverAddress with IP
@@ -34,10 +38,6 @@ const char kPath[] = "/api/timezone/Europe/London.txt"; // Path to download (thi
 
 const int kNetworkTimeout = 30 * 1000; // num of ms to wait without receiving any data before we give up
 const int kNetworkDelay = 1000; // num of ms to wait if no data is available before trying again
-
-// Server details
-const char serverAddress[] = "3.144.71.254";
-const int serverPort = 5000;
 
 // Sensor initialization
 DHT20 DHT;
