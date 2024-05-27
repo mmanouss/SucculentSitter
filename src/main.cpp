@@ -43,6 +43,13 @@ const int kNetworkDelay = 1000; // num of ms to wait if no data is available bef
 DHT20 DHT;
 uint8_t count_var = 0;
 
+// Photoresistor code
+const int adc_photoresistor_pin = 13; // pin connected to the photoresistor
+
+int max_light = 0; // initialize maximum light sensor value
+int min_light = 5000; // initialize minimum light sensor value
+int mapped_value; // mapped min and max light values
+
 // Function declarations
 void nvs_access();
 void aws_setup();
@@ -268,11 +275,31 @@ String dht20_loop()
   return "";
 }
 
+void calibrate_light_sensor() {
+  unsigned long start_time = millis(); // current time
+  unsigned long c_duration = 10000; // calibration phase duration (10 seconds)
+  
+  // calibrate for 10 seconds, allow LED to beep
+  Serial.println("Calibrating photoresistor for 10 seconds...");
+  while (millis() - start_time < c_duration) 
+  {
+    delay(500);
+    int light_value = analogRead(adc_photoresistor_pin);
+    if (light_value > max_light)
+      max_light = light_value;
+    if (light_value < min_light)
+      min_light = light_value;
+    delay(500);
+  }
+  Serial.println("Calibrated photoresistor!");
+}
+
 void setup() 
 {
+  pinMode(adc_photoresistor_pin, INPUT);
   Serial.begin(9600);
-  delay(1000);
 
+  calibrate_light_sensor();
   aws_setup();
   dht20_setup();
 }
