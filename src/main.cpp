@@ -31,21 +31,6 @@ typedef int display_style;
 const char serverAddress[] = "3.144.71.254"; // adjust with instance
 const int serverPort = 5000;
 
-// Getting everything started:
-// 1. start AWS instance in the webpage
-// 2. copy ssh line from the webpage and start it after replacing serverAddress with IP
-
-// sudo apt update
-// sudo apt install pip
-// sudo apt install python3.10-venv
-// pythonj3 -m venv venv
-// . venv/bin/activate
-// pip install Flask
-
-// 3. export FLASK_APP=server.py
-// 4. python3 -m flask run --host=0.0.0.0
-// 5. Type in browser: 18.216.224.146:5000/?var=x where "x" is any value we want to send to the server
-
 // This example downloads the URL "http://arduino.cc/"
 char ssid[50]; // your network SSID (name)
 char pass[50]; // your network password (use for WPA, or use as key for WEP)
@@ -219,7 +204,8 @@ String str_temp_and_humidity()
     String temp = String(t, 2); // 2 decimals
     String humid = String(h, 2); // 2 decimals
 
-    return "Temperature%20=%20" + temp + ",%20Humidity%20=%20" + humid;
+    // for AWS: "Temperature%20=%20" + temp + ",%20Humidity%20=%20" + humid;
+    return "Temperature:" + temp + ",Humidity:" + humid;
 }
 
 void dht20_setup()
@@ -247,19 +233,10 @@ String dht20_loop()
       if ((count_var % 10) == 0)
       {
         count_var = 0;
-        // Serial.println();
-        // Serial.println("Type\tHumidity (%)\tTemp (°C)\tTime (µs)\tStatus");
+        // Serial.println("\nType\tHumidity (%)\tTemp (°C)\tTime (µs)\tStatus");
       }
       count_var++;
 
-      // Serial.print("DHT20 \t");
-      //  DISPLAY DATA, sensor has only one decimal.
-      // Serial.print(DHT.getHumidity(), 1);
-      // Serial.print("\t\t");
-      // Serial.print(DHT.getTemperature(), 1);
-      // Serial.print("\t\t");
-      // Serial.print(stop - start);
-      // Serial.print("\t\t");
       switch (status)
       {
         case DHT20_OK:
@@ -296,7 +273,6 @@ void calibrate_light_sensor() {
   unsigned long start_time = millis(); // current time
   unsigned long c_duration = 10000; // calibration phase duration (10 seconds)
   
-  // calibrate for 10 seconds, allow LED to beep
   Serial.println("Calibrating photoresistor for 10 seconds...");
   while (millis() - start_time < c_duration) 
   {
@@ -356,7 +332,7 @@ void setup()
 
   buzzer_setup();
   calibrate_light_sensor();
-  aws_setup();
+  //aws_setup(); // Comment out for testing functionality
   dht20_setup();
 }
 
@@ -365,7 +341,10 @@ void loop()
   buzzerSwitch(); // switch case between buzzer's on and off states
   String send_val = dht20_loop();
   if (send_val != "")
-    aws_loop(send_val);
+  {
+    Serial.println(send_val);
+    //aws_loop(send_val); // Comment out for testing functionality
+  }
 }
 
 
