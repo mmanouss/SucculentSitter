@@ -255,7 +255,6 @@ void calibrate_light_sensor() {
   unsigned long start_time = millis(); // current time
   unsigned long c_duration = 10000; // calibration phase duration (10 seconds)
   
-  // calibrate for 10 seconds, allow LED to beep
   Serial.println("Calibrating photoresistor for 10 seconds...");
   while (millis() - start_time < c_duration) 
   {
@@ -276,7 +275,7 @@ void setup()
   Serial.begin(9600);
 
   calibrate_light_sensor();
-  aws_setup();
+  //aws_setup(); // Comment out for testing functionality
   dht20_setup();
 }
 
@@ -284,5 +283,8 @@ void loop()
 {
   String send_val = dht20_loop();
   if (send_val != "")
-    aws_loop(send_val);
+  {
+    Serial.println(send_val);
+    //aws_loop(send_val); // Comment out for testing functionality
+  }
 }
