@@ -13,3 +13,6 @@ Setting up AWS instance:
 // 3. export FLASK_APP=server.py
 // 4. python3 -m flask run --host=0.0.0.0
 // 5. Type in browser: 18.216.224.146:5000/?var=x where "x" is any value we want to send to the server
+
+FOR PHOTORESISTOR:
+If light is below shade value for several hours in a row during peak sunny hours, tell user to move plant
