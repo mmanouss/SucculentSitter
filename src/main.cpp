@@ -12,6 +12,7 @@
 #include <TFT_eSPI.h>
 
 #define BUZZER_PIN 15
+#define PHOTORESISTOR_PIN 13
 
 // DEFINING BUZZER VALUES
 #define BUZZER_OFF_STATE 0
@@ -41,15 +42,13 @@ const char kPath[] = "/api/timezone/Europe/London.txt"; // Path to download (thi
 const int kNetworkTimeout = 30 * 1000; // num of ms to wait without receiving any data before we give up
 const int kNetworkDelay = 1000; // num of ms to wait if no data is available before trying again
 
-// Sensor initialization
+// DHT initialization
 DHT20 DHT;
 uint8_t count_var = 0;
 
-// Photoresistor code
-const int adc_photoresistor_pin = 13; // pin connected to the photoresistor
-
+// Photoresistor initialization
 int max_light = 0; // initialize maximum light sensor value
-int min_light = 5000; // initialize minimum light sensor value
+int shade = 2500; // this number and below indicates not in a sunny spot
 int mapped_value; // mapped min and max light values
 
 // Function declarations
@@ -57,9 +56,9 @@ void nvs_access();
 void aws_setup();
 void aws_loop(const String & send_val);
 
-String str_temp_and_humidity();
-void dht20_setup();
-String dht20_loop();
+String temp_humidity_light();
+void sensor_data_setup();
+String sensor_data_loop();
 
 void nvs_access() 
 {
@@ -196,32 +195,29 @@ void aws_loop(const String & send_val)
     delay(2000); // COMMENT OUT WHEN TESTING
 }
 
-String str_temp_and_humidity() 
+String temp_humidity_light() 
 {
     float t = DHT.getTemperature();
     float h = DHT.getHumidity();
+    int l = analogRead(PHOTORESISTOR_PIN);
 
     String temp = String(t, 2); // 2 decimals
     String humid = String(h, 2); // 2 decimals
+    String light = String(l);
 
     // for AWS: "Temperature%20=%20" + temp + ",%20Humidity%20=%20" + humid;
-    return "Temperature: " + temp + " Humidity: " + humid;
+    return "Temperature: " + temp + " Humidity: " + humid + " Light: " + light;
 }
 
-void dht20_setup()
+void sensor_data_setup()
 {
-  Serial.println(__FILE__);
-  Serial.print("DHT20 LIBRARY VERSION: ");
-  Serial.println(DHT20_LIB_VERSION);
-  Serial.println();
-
   Wire.begin();
-  DHT.begin(); //ESP32 default pins 21 22
+  DHT.begin(); // ESP32 default pins 21 22
 
   delay(1000);
 }
 
-String dht20_loop()
+String sensor_data_loop()
 {
     if (millis() - DHT.lastRead() >= 1000)
     {
@@ -241,7 +237,7 @@ String dht20_loop()
       {
         case DHT20_OK:
           // Serial.print("OK");
-          return str_temp_and_humidity();
+          return temp_humidity_light();
         case DHT20_ERROR_CHECKSUM:
           Serial.println("Checksum error");
           break;
@@ -267,24 +263,6 @@ String dht20_loop()
       Serial.print("\n");
   }
   return "";
-}
-
-void calibrate_light_sensor() {
-  unsigned long start_time = millis(); // current time
-  unsigned long c_duration = 10000; // calibration phase duration (10 seconds)
-  
-  Serial.println("Calibrating photoresistor for 10 seconds...");
-  while (millis() - start_time < c_duration) 
-  {
-    delay(500);
-    int light_value = analogRead(adc_photoresistor_pin);
-    if (light_value > max_light)
-      max_light = light_value;
-    if (light_value < min_light)
-      min_light = light_value;
-    delay(500);
-  }
-  Serial.println("Calibrated photoresistor!");
 }
 
 void buzzer_setup()
@@ -321,20 +299,19 @@ void buzzerSwitch()
 
 void setup() 
 {
-  pinMode(adc_photoresistor_pin, INPUT);
+  pinMode(PHOTORESISTOR_PIN, INPUT);
   Serial.begin(9600);
 
   buzzer_setup();
-  calibrate_light_sensor();
   //aws_setup(); // Comment out for testing functionality
-  dht20_setup();
+  sensor_data_setup();
 }
 
 void loop() 
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
 
-  String send_val = dht20_loop();
+  String send_val = sensor_data_loop();
   if (send_val != "")
   {
     Serial.println(send_val);
