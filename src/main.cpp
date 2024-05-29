@@ -10,7 +10,6 @@
 #include "nvs_flash.h"
 #include "DHT20.h"
 #include <TFT_eSPI.h>
-#include <Adafruit_CAP1188.h>
 
 #define BUZZER_PIN 15
 #define PHOTORESISTOR_PIN 13
@@ -23,22 +22,8 @@
 int buzzer_state; // Buzzer state
 unsigned long buzzer_timer; // Buzzer timer
 
-// DEFINING DISPLAY VALUES
-typedef int display_style;
-#define TIP_STYLE 1
-#define WARNINING_STYLE 2
-// Reset Pin is used for I2C or SPI
-#define CAP1188_RESET (-1) // can be anything bc not wired
-// CS pin is used for software or hardware SPI
-#define CAP1188_CS  26
-// These are defined for software SPI, for hardware SPI, check your 
-// board's SPI pins in the Arduino documentation
-#define CAP1188_MOSI  32
-#define CAP1188_MISO  21
-#define CAP1188_CLK  22
 TFT_eSPI ttg = TFT_eSPI(); 
-Adafruit_CAP1188 cap = Adafruit_CAP1188(CAP1188_CLK, CAP1188_MISO, CAP1188_MOSI, CAP1188_CS, CAP1188_RESET);
-void p1_oled_display(std::string message);
+void display_loop(String message);
 
 // Server details
 const char serverAddress[] = "3.144.71.254"; // adjust with instance
@@ -296,16 +281,6 @@ void buzzerSwitch()
 {
     switch(buzzer_state)
     {
-<<<<<<< HEAD
-        case BUZZER_OFF_STATE:
-            if (buzzer_timer_expired()){
-                buzzer_state = BUZZER_ON_STATE;
-            }
-        case BUZZER_ON_STATE:
-            buzz(BUZZER_ON_TIME);
-            buzzer_timer = millis() + BUZZER_OFF_TIME;
-            buzzer_state = BUZZER_OFF_STATE;
-=======
       case BUZZER_OFF_STATE:
         if (millis() >= buzzer_timer)
             buzzer_state = BUZZER_ON_STATE;
@@ -316,27 +291,25 @@ void buzzerSwitch()
         buzzer_timer = millis() + BUZZER_OFF_TIME;
         buzzer_state = BUZZER_OFF_STATE;
         break;
->>>>>>> fa7257d74c009bf51833ebbf96a0db049463d452
     }
 }
 
-void OLED_setup() 
+void display_setup() 
 {
   ttg.init();
   ttg.setRotation(1);
 }
 
-void p1_oled_display(std::string message)
+void display_loop(String message)
 {
   if (message == "None")
     return;
-  
-  
-  ttg.setTextDatum(MC_DATUM);
-  ttg.setTextColor(TFT_WHITE);
-  ttg.fillScreen(TFT_BLACK);
-  ttg.drawString(message, 120, 60, 6);
-  // delay(1000);
+
+    ttg.println();
+    ttg.setTextDatum(MC_DATUM);
+    ttg.setTextColor(TFT_WHITE);
+    ttg.fillScreen(TFT_BLACK);
+    ttg.drawString(message, 120, 60, 6);
   
 }
 
@@ -345,26 +318,21 @@ void setup()
   pinMode(PHOTORESISTOR_PIN, INPUT);
   Serial.begin(9600);
 
-  OLED_setup();
+  display_setup();
   buzzer_setup();
-  //aws_setup(); // Comment out for testing functionality
   sensor_data_setup();
+  //aws_setup(); // Comment out for testing functionality
 }
 
 void loop() 
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
 
-<<<<<<< HEAD
-  p1_oled_display("message"); //
-
-  String send_val = dht20_loop();
-=======
   String send_val = sensor_data_loop();
->>>>>>> fa7257d74c009bf51833ebbf96a0db049463d452
   if (send_val != "")
   {
     Serial.println(send_val);
+    display_loop(send_val);
     //aws_loop(send_val); // Comment out for testing functionality
   }
 }
