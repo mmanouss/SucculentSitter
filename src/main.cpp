@@ -9,6 +9,23 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "DHT20.h"
+#include <TFT_eSPI.h>
+#include <string.h>
+
+#define BUZZER_PIN 13 
+
+// DEFINING BUZZER VALUES
+#define BUZZER_OFF_STATE 0
+#define BUZZER_ON_STATE 1
+#define BUZZER_OFF_TIME 1800000 // 30min * 60s/min = 1800s * 1000ms/s = 1800000ms
+#define BUZZER_ON_TIME 10000 // 10s * 1000ms/s = 10000ms
+int buzzer_state; // Buzzer state
+unsigned long buzzer_timer; // Traffic light timer.
+
+// DEFINING DISPLAY VALUES
+typedef int display_style;
+#define TIP_STYLE 1
+#define WARNINING_STYLE 2
 
 // Server details
 const char serverAddress[] = "3.144.71.254"; // adjust with instance
@@ -294,11 +311,50 @@ void calibrate_light_sensor() {
   Serial.println("Calibrated photoresistor!");
 }
 
+void buzzer_setup()
+{
+    // INITIALIZING BUZZER VALUES
+    pinMode(BUZZER_PIN, OUTPUT); // Configure buzzer pin
+    buzzer_timer = millis() + BUZZER_OFF_TIME;
+    buzzer_state = BUZZER_OFF_STATE;
+}
+
+bool buzzer_timer_expired()
+{
+    // return true if timer expires
+    // timer expires when tl_timer == current millis() count
+    if (millis() == buzzer_timer)
+        return true;
+    return false;
+}
+
+void buzz(unsigned long on)
+{
+    tone(BUZZER_PIN, 10);
+    delay(on);
+    noTone(BUZZER_PIN);
+}
+
+void buzzerSwitch() 
+{
+    switch(buzzer_state)
+    {
+        case BUZZER_OFF_STATE:
+            if (buzzer_timer_expired()){
+                buzzer_state = BUZZER_ON_STATE;
+            }
+        case BUZZER_ON_STATE:
+            buzz(BUZZER_ON_TIME);
+            buzzer_timer = millis() + BUZZER_OFF_TIME;
+    }
+}
+
 void setup() 
 {
   pinMode(adc_photoresistor_pin, INPUT);
   Serial.begin(9600);
 
+  buzzer_setup();
   calibrate_light_sensor();
   aws_setup();
   dht20_setup();
@@ -306,7 +362,10 @@ void setup()
 
 void loop() 
 {
+  buzzerSwitch(); // switch case between buzzer's on and off states
   String send_val = dht20_loop();
   if (send_val != "")
     aws_loop(send_val);
 }
+
+
