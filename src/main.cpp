@@ -295,12 +295,6 @@ void buzzer_setup()
     buzzer_state = BUZZER_OFF_STATE;
 }
 
-bool buzzer_timer_expired()
-{
-    // return true if timer expires
-    return millis() == buzzer_timer;
-}
-
 void buzz(unsigned long on)
 {
     tone(BUZZER_PIN, 10);
@@ -312,13 +306,16 @@ void buzzerSwitch()
 {
     switch(buzzer_state)
     {
-        case BUZZER_OFF_STATE:
-            if (buzzer_timer_expired()){
-                buzzer_state = BUZZER_ON_STATE;
-            }
-        case BUZZER_ON_STATE:
-            buzz(BUZZER_ON_TIME);
-            buzzer_timer = millis() + BUZZER_OFF_TIME;
+      case BUZZER_OFF_STATE:
+        if (millis() >= buzzer_timer)
+            buzzer_state = BUZZER_ON_STATE;
+        break;
+      case BUZZER_ON_STATE:
+        Serial.println("Buzzing insects away!");
+        buzz(BUZZER_ON_TIME);
+        buzzer_timer = millis() + BUZZER_OFF_TIME;
+        buzzer_state = BUZZER_OFF_STATE;
+        break;
     }
 }
 
