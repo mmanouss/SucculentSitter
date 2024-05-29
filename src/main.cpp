@@ -10,19 +10,19 @@
 #include "nvs_flash.h"
 #include "DHT20.h"
 #include <TFT_eSPI.h>
-#include <string.h>
 
-#define BUZZER_PIN 13 
+#define BUZZER_PIN 15
 
 // DEFINING BUZZER VALUES
 #define BUZZER_OFF_STATE 0
 #define BUZZER_ON_STATE 1
 #define BUZZER_OFF_TIME 1800000 // 30min * 60s/min = 1800s * 1000ms/s = 1800000ms
 #define BUZZER_ON_TIME 10000 // 10s * 1000ms/s = 10000ms
-int buzzer_state; // Buzzer state
-unsigned long buzzer_timer; // Traffic light timer.
 
-// DEFINING DISPLAY VALUES
+int buzzer_state; // Buzzer state
+unsigned long buzzer_timer; // Buzzer timer
+
+// Display value definitions
 typedef int display_style;
 #define TIP_STYLE 1
 #define WARNINING_STYLE 2
@@ -298,10 +298,7 @@ void buzzer_setup()
 bool buzzer_timer_expired()
 {
     // return true if timer expires
-    // timer expires when tl_timer == current millis() count
-    if (millis() == buzzer_timer)
-        return true;
-    return false;
+    return millis() == buzzer_timer;
 }
 
 void buzz(unsigned long on)
@@ -339,6 +336,7 @@ void setup()
 void loop() 
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
+
   String send_val = dht20_loop();
   if (send_val != "")
   {
