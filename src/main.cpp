@@ -10,6 +10,7 @@
 #include "nvs_flash.h"
 #include "DHT20.h"
 #include <TFT_eSPI.h>
+#include <Adafruit_CAP1188.h>
 
 #define BUZZER_PIN 15
 
@@ -18,14 +19,25 @@
 #define BUZZER_ON_STATE 1
 #define BUZZER_OFF_TIME 1800000 // 30min * 60s/min = 1800s * 1000ms/s = 1800000ms
 #define BUZZER_ON_TIME 10000 // 10s * 1000ms/s = 10000ms
-
 int buzzer_state; // Buzzer state
 unsigned long buzzer_timer; // Buzzer timer
 
-// Display value definitions
+// DEFINING DISPLAY VALUES
 typedef int display_style;
 #define TIP_STYLE 1
 #define WARNINING_STYLE 2
+// Reset Pin is used for I2C or SPI
+#define CAP1188_RESET (-1) // can be anything bc not wired
+// CS pin is used for software or hardware SPI
+#define CAP1188_CS  26
+// These are defined for software SPI, for hardware SPI, check your 
+// board's SPI pins in the Arduino documentation
+#define CAP1188_MOSI  32
+#define CAP1188_MISO  21
+#define CAP1188_CLK  22
+TFT_eSPI ttg = TFT_eSPI(); 
+Adafruit_CAP1188 cap = Adafruit_CAP1188(CAP1188_CLK, CAP1188_MISO, CAP1188_MOSI, CAP1188_CS, CAP1188_RESET);
+void p1_oled_display(std::string message);
 
 // Server details
 const char serverAddress[] = "3.144.71.254"; // adjust with instance
@@ -319,7 +331,28 @@ void buzzerSwitch()
         case BUZZER_ON_STATE:
             buzz(BUZZER_ON_TIME);
             buzzer_timer = millis() + BUZZER_OFF_TIME;
+            buzzer_state = BUZZER_OFF_STATE;
     }
+}
+
+void OLED_setup() 
+{
+  ttg.init();
+  ttg.setRotation(1);
+}
+
+void p1_oled_display(std::string message)
+{
+  if (message == "None")
+    return;
+  
+  
+  ttg.setTextDatum(MC_DATUM);
+  ttg.setTextColor(TFT_WHITE);
+  ttg.fillScreen(TFT_BLACK);
+  ttg.drawString(message, 120, 60, 6);
+  // delay(1000);
+  
 }
 
 void setup() 
@@ -327,6 +360,7 @@ void setup()
   pinMode(adc_photoresistor_pin, INPUT);
   Serial.begin(9600);
 
+  OLED_setup();
   buzzer_setup();
   calibrate_light_sensor();
   //aws_setup(); // Comment out for testing functionality
@@ -337,6 +371,8 @@ void loop()
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
 
+  p1_oled_display("message"); //
+
   String send_val = dht20_loop();
   if (send_val != "")
   {
@@ -344,5 +380,7 @@ void loop()
     //aws_loop(send_val); // Comment out for testing functionality
   }
 }
+
+
 
 
