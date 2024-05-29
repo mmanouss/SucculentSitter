@@ -1,3 +1,5 @@
 aws_setup/ssid_user_and_pass.h
-notes.txt
 *.pem
+.pio
+.vscode
+.venv

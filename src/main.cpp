@@ -205,7 +205,7 @@ String str_temp_and_humidity()
     String humid = String(h, 2); // 2 decimals
 
     // for AWS: "Temperature%20=%20" + temp + ",%20Humidity%20=%20" + humid;
-    return "Temperature:" + temp + ",Humidity:" + humid;
+    return "Temperature: " + temp + " Humidity: " + humid;
 }
 
 void dht20_setup()
