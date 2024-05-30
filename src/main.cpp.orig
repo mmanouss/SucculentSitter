@@ -38,7 +38,7 @@ typedef int display_style;
 #define CAP1188_CLK  22
 TFT_eSPI ttg = TFT_eSPI(); 
 Adafruit_CAP1188 cap = Adafruit_CAP1188(CAP1188_CLK, CAP1188_MISO, CAP1188_MOSI, CAP1188_CS, CAP1188_RESET);
-void p1_oled_display(String message);
+void p1_oled_display(std::string message);
 
 // Server details
 const char serverAddress[] = "3.144.71.254"; // adjust with instance
@@ -296,14 +296,27 @@ void buzzerSwitch()
 {
     switch(buzzer_state)
     {
+<<<<<<< HEAD
         case BUZZER_OFF_STATE:
-            if (millis() >= buzzer_timer){
+            if (buzzer_timer_expired()){
                 buzzer_state = BUZZER_ON_STATE;
             }
         case BUZZER_ON_STATE:
             buzz(BUZZER_ON_TIME);
             buzzer_timer = millis() + BUZZER_OFF_TIME;
             buzzer_state = BUZZER_OFF_STATE;
+=======
+      case BUZZER_OFF_STATE:
+        if (millis() >= buzzer_timer)
+            buzzer_state = BUZZER_ON_STATE;
+        break;
+      case BUZZER_ON_STATE:
+        Serial.println("Buzzing insects away!");
+        buzz(BUZZER_ON_TIME);
+        buzzer_timer = millis() + BUZZER_OFF_TIME;
+        buzzer_state = BUZZER_OFF_STATE;
+        break;
+>>>>>>> fa7257d74c009bf51833ebbf96a0db049463d452
     }
 }
 
@@ -313,7 +326,7 @@ void OLED_setup()
   ttg.setRotation(1);
 }
 
-void p1_oled_display(String message)
+void p1_oled_display(std::string message)
 {
   if (message == "None")
     return;
@@ -342,9 +355,13 @@ void loop()
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
 
-  p1_oled_display("message");
+<<<<<<< HEAD
+  p1_oled_display("message"); //
 
+  String send_val = dht20_loop();
+=======
   String send_val = sensor_data_loop();
+>>>>>>> fa7257d74c009bf51833ebbf96a0db049463d452
   if (send_val != "")
   {
     Serial.println(send_val);
