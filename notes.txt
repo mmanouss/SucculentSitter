@@ -17,3 +17,13 @@ Setting up AWS instance:
 
 FOR PHOTORESISTOR:
 If light is below shade value for several hours in a row during peak sunny hours, tell user to move plant
+
+Analytics tasks:
+1. Succulent should be between 40-50 humidity, cannot dip below this
+2. Find max and min temp value a succulent should be in, display a warning if temp too high or low
+3. Map the photoresistor min max values to display light as an interpretable percentage min = 0, max = 4095
+4. If humidity drastically hikes, mark plant as watered and start countdown 
+    * Make some formula that also makes watering sooner if humidity is very low
+
+Web server:
+Figure out how to display temp, moisture, light graphs, and current stats with tips/warnings
