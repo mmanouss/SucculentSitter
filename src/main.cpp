@@ -11,23 +11,29 @@
 #include "DHT20.h"
 #include <TFT_eSPI.h>
 
-
 #define BUZZER_PIN 15
-#define PHOTORESISTOR_PIN 13
+#define PHOTORESISTOR_PIN 33
 
 // DEFINING BUZZER VALUES
 #define BUZZER_OFF_STATE 0
 #define BUZZER_ON_STATE 1
 #define BUZZER_OFF_TIME 1800000 // 30min * 60s/min = 1800s * 1000ms/s = 1800000ms
 #define BUZZER_ON_TIME 10000 // 10s * 1000ms/s = 10000ms
+
+struct SensorData {
+    String temp;
+    String humid;
+    String light;
+};
+
 int buzzer_state; // Buzzer state
 unsigned long buzzer_timer; // Buzzer timer
 
 TFT_eSPI ttg = TFT_eSPI(); 
-void p1_oled_display(String message);
+void display_loop(SensorData sensor_val);
 
 // Server details
-const char serverAddress[] = "3.144.71.254"; // adjust with instance
+const char serverAddress[] = "3.149.230.7"; // adjust with instance
 const int serverPort = 5000;
 
 // This example downloads the URL "http://arduino.cc/"
@@ -47,16 +53,15 @@ uint8_t count_var = 0;
 // Photoresistor initialization
 int max_light = 0; // initialize maximum light sensor value
 int shade = 2500; // this number and below indicates not in a sunny spot
-int mapped_value; // mapped min and max light values
 
 // Function declarations
 void nvs_access();
 void aws_setup();
 void aws_loop(const String & send_val);
 
-String temp_humidity_light();
+SensorData temp_humidity_light();
 void sensor_data_setup();
-String sensor_data_loop();
+SensorData sensor_data_loop();
 
 void nvs_access() 
 {
@@ -193,18 +198,18 @@ void aws_loop(const String & send_val)
     delay(2000); // COMMENT OUT WHEN TESTING
 }
 
-String temp_humidity_light() 
+SensorData temp_humidity_light() 
 {
     float t = DHT.getTemperature();
     float h = DHT.getHumidity();
     int l = analogRead(PHOTORESISTOR_PIN);
 
-    String temp = String(t, 2); // 2 decimals
-    String humid = String(h, 2); // 2 decimals
-    String light = String(l);
+    SensorData data;
+    data.temp = String(t, 2);
+    data.humid = String(h, 2);
+    data.light = String(l);
 
-    // for AWS: "Temperature%20=%20" + temp + ",%20Humidity%20=%20" + humid;
-    return "Temperature: " + temp + " Humidity: " + humid + " Light: " + light;
+    return data;
 }
 
 void sensor_data_setup()
@@ -215,8 +220,9 @@ void sensor_data_setup()
   delay(1000);
 }
 
-String sensor_data_loop()
+SensorData sensor_data_loop()
 {
+    SensorData data = temp_humidity_light();
     if (millis() - DHT.lastRead() >= 1000)
     {
       //  READ DATA
@@ -225,17 +231,13 @@ String sensor_data_loop()
       uint32_t stop = micros();
 
       if ((count_var % 10) == 0)
-      {
         count_var = 0;
-        // Serial.println("\nType\tHumidity (%)\tTemp (°C)\tTime (µs)\tStatus");
-      }
       count_var++;
 
       switch (status)
       {
         case DHT20_OK:
-          // Serial.print("OK");
-          return temp_humidity_light();
+          break;
         case DHT20_ERROR_CHECKSUM:
           Serial.println("Checksum error");
           break;
@@ -260,7 +262,7 @@ String sensor_data_loop()
       }
       Serial.print("\n");
   }
-  return "";
+  return data;
 }
 
 void buzzer_setup()
@@ -282,14 +284,15 @@ void buzzerSwitch()
 {
     switch(buzzer_state)
     {
-        case BUZZER_OFF_STATE:
-            if (millis() >= buzzer_timer){
-                buzzer_state = BUZZER_ON_STATE;
-            }
-        case BUZZER_ON_STATE:
-            buzz(BUZZER_ON_TIME);
-            buzzer_timer = millis() + BUZZER_OFF_TIME;
-            buzzer_state = BUZZER_OFF_STATE;
+      case BUZZER_OFF_STATE:
+        if (millis() >= buzzer_timer)
+            buzzer_state = BUZZER_ON_STATE;
+        break;
+      case BUZZER_ON_STATE:
+        buzz(BUZZER_ON_TIME);
+        buzzer_timer = millis() + BUZZER_OFF_TIME;
+        buzzer_state = BUZZER_OFF_STATE;
+        break;
     }
 }
 
@@ -297,24 +300,27 @@ void display_setup()
 {
   ttg.init();
   ttg.setRotation(1);
+  ttg.println();
+  ttg.setTextDatum(MC_DATUM);
+  ttg.setTextColor(TFT_WHITE);
+  ttg.setTextSize(2);
+  ttg.fillScreen(TFT_BLACK);
 }
 
-void p1_oled_display(String message)
+void display_loop(SensorData sensor_val)
 {
-  if (message == "None")
+  if (sensor_val.temp == "0" && sensor_val.humid == "0" && sensor_val.light == "0")
     return;
 
-    ttg.println();
-    ttg.setTextDatum(MC_DATUM);
-    ttg.setTextColor(TFT_WHITE);
-    ttg.fillScreen(TFT_BLACK);
-    ttg.drawString(message, 120, 60, 6);
-  
-}
+  ttg.println();
+  ttg.setTextDatum(MC_DATUM);
+  ttg.setTextColor(TFT_WHITE);
+  ttg.setTextSize(2);
+  ttg.fillScreen(TFT_BLACK);
 
-void display_loop(String message)
-{
-  p1_oled_display(message);
+  ttg.drawString("Temperature: " + sensor_val.temp, 120, 40, 6);
+  ttg.drawString("Humidity: " + sensor_val.humid, 120, 80, 6);
+  ttg.drawString("Light: " + sensor_val.light, 120, 120, 6);
 }
 
 void setup() 
@@ -325,22 +331,16 @@ void setup()
   display_setup();
   buzzer_setup();
   sensor_data_setup();
-  //aws_setup(); // Comment out for testing functionality
+  aws_setup(); // Uncomment for testing AWS
 }
 
 void loop() 
 {
+
   buzzerSwitch(); // switch case between buzzer's on and off states
 
-  String send_val = sensor_data_loop();
-  if (send_val != "")
-  {
-    Serial.println(send_val);
-    display_loop(send_val);
-    //aws_loop(send_val); // Comment out for testing functionality
-  }
+  SensorData sensor_val = sensor_data_loop();
+  //Serial.println("Temperature: " + sensor_val.temp + " Humidity: " + sensor_val.humid + " Light: " + sensor_val.light); // Uncomment for testing sensor data, comment AWS out
+  display_loop(sensor_val);
+  aws_loop("Temperature%20=%20" + sensor_val.temp + ",%20Humidity%20=%20" + sensor_val.humid + ",%20Light%20=%20" + sensor_val.light); // Uncomment for testing AWS
 }
-
-
-
-

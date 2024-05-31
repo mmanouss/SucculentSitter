@@ -3,3 +3,4 @@ aws_setup/ssid_user_and_pass.h
 .pio
 .vscode
 .venv
+*.code-workspace

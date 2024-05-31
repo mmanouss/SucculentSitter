@@ -5,14 +5,15 @@ Setting up AWS instance:
 
 // sudo apt update
 // sudo apt install pip
-// sudo apt install python3.10-venv
-// pythonj3 -m venv venv
+// sudo apt install python3.12-venv
+// python3 -m venv venv
 // . venv/bin/activate
 // pip install Flask
 
-// 3. export FLASK_APP=server.py
-// 4. python3 -m flask run --host=0.0.0.0
-// 5. Type in browser: 18.216.224.146:5000/?var=x where "x" is any value we want to send to the server
+// 3. vim server.py
+// 4. export FLASK_APP=server.py
+// 5. python3 -m flask run --host=0.0.0.0
+// 6. Type in browser: 18.216.224.146:5000/?var=x where "x" is any value we want to send to the server
 
 FOR PHOTORESISTOR:
 If light is below shade value for several hours in a row during peak sunny hours, tell user to move plant
