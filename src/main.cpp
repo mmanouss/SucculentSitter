@@ -22,7 +22,7 @@
 
 struct SensorData {
     String temp;
-    String humid;
+    String moisture;
     String light;
 };
 
@@ -49,17 +49,16 @@ const int kNetworkDelay = 1000; // num of ms to wait if no data is available bef
 // DHT initialization
 DHT20 DHT;
 uint8_t count_var = 0;
-
-// Photoresistor initialization
-int max_light = 0; // initialize maximum light sensor value
-int shade = 2500; // this number and below indicates not in a sunny spot
+const int dry = 60; // this number and below indicates a dry plant
+const int shade = 2500; // this number and below indicates not in a sunny spot
 
 // Function declarations
 void nvs_access();
 void aws_setup();
 void aws_loop(const String & send_val);
+String aws_loop_msg(SensorData sensor_val);
 
-SensorData temp_humidity_light();
+SensorData temp_Moisture_light();
 void sensor_data_setup();
 SensorData sensor_data_loop();
 
@@ -112,7 +111,6 @@ void aws_setup()
     nvs_access();
     
     // We start by connecting to a WiFi network
-    delay(1000);
     Serial.println();
     Serial.println();
     Serial.print("Connecting to ");
@@ -195,10 +193,9 @@ void aws_loop(const String & send_val)
     
     // And just stop, now that we've tried a download
     // while (1);
-    delay(2000); // COMMENT OUT WHEN TESTING
 }
 
-SensorData temp_humidity_light() 
+SensorData temp_Moisture_light() 
 {
     float t = DHT.getTemperature();
     float h = DHT.getHumidity();
@@ -206,7 +203,7 @@ SensorData temp_humidity_light()
 
     SensorData data;
     data.temp = String(t, 2);
-    data.humid = String(h, 2);
+    data.moisture = String(h, 2);
     data.light = String(l);
 
     return data;
@@ -216,13 +213,11 @@ void sensor_data_setup()
 {
   Wire.begin();
   DHT.begin(); // ESP32 default pins 21 22
-
-  delay(1000);
 }
 
 SensorData sensor_data_loop()
 {
-    SensorData data = temp_humidity_light();
+    SensorData data = temp_Moisture_light();
     if (millis() - DHT.lastRead() >= 1000)
     {
       //  READ DATA
@@ -300,27 +295,46 @@ void display_setup()
 {
   ttg.init();
   ttg.setRotation(1);
-  ttg.println();
-  ttg.setTextDatum(MC_DATUM);
+  ttg.setTextSize(1);
   ttg.setTextColor(TFT_WHITE);
-  ttg.setTextSize(2);
   ttg.fillScreen(TFT_BLACK);
 }
 
 void display_loop(SensorData sensor_val)
 {
-  if (sensor_val.temp == "0" && sensor_val.humid == "0" && sensor_val.light == "0")
+  char *endptr;
+
+  if (sensor_val.temp == "0" && sensor_val.moisture == "0" && sensor_val.light == "0")
     return;
 
-  ttg.println();
-  ttg.setTextDatum(MC_DATUM);
-  ttg.setTextColor(TFT_WHITE);
   ttg.setTextSize(2);
+  ttg.setTextColor(TFT_WHITE);
   ttg.fillScreen(TFT_BLACK);
 
-  ttg.drawString("Temperature: " + sensor_val.temp, 120, 40, 6);
-  ttg.drawString("Humidity: " + sensor_val.humid, 120, 80, 6);
-  ttg.drawString("Light: " + sensor_val.light, 120, 120, 6);
+  ttg.drawString("Temperature: " + sensor_val.temp, 0, 0, 1);
+  
+  if (atoi(sensor_val.moisture.c_str()) < dry)
+    ttg.drawString("Low Moisture: " + sensor_val.moisture, 0, 32, 1);
+  else
+    ttg.drawString("Moisture: " + sensor_val.moisture, 0, 32, 1);
+  
+  if (atoi(sensor_val.light.c_str()) < shade)
+    ttg.drawString("Low Light: " + sensor_val.light, 0, 64, 1);
+  else
+    ttg.drawString("Light: " + sensor_val.light, 0, 64, 1);
+}
+
+String aws_loop_msg(SensorData sensor_val)
+{
+  if (atoi(sensor_val.moisture.c_str()) >= dry && atoi(sensor_val.light.c_str()) >= shade)
+    return "Temperature%20=%20" + sensor_val.temp + ",%20Moisture%20=%20" + sensor_val.moisture + ",%20Light%20=%20" + sensor_val.light;
+  else if (atoi(sensor_val.moisture.c_str()) < dry && atoi(sensor_val.light.c_str()) < shade)
+    return "Temperature%20=%20" + sensor_val.temp + ",%20Moisture%20(LOW)%20=%20" + sensor_val.moisture + ",%20Light%20(LOW)%20=%20" + sensor_val.light;
+  else if (atoi(sensor_val.moisture.c_str()) < dry)
+    return "Temperature%20=%20" + sensor_val.temp + ",%20Moisture%20(LOW)%20=%20" + sensor_val.moisture + ",%20Light%20=%20" + sensor_val.light;
+  else if (atoi(sensor_val.light.c_str()) < shade)
+    return "Temperature%20=%20" + sensor_val.temp + ",%20Moisture%20=%20" + sensor_val.moisture + ",%20Light%20(LOW)%20=%20" + sensor_val.light;
+  return "";
 }
 
 void setup() 
@@ -336,11 +350,10 @@ void setup()
 
 void loop() 
 {
-
   buzzerSwitch(); // switch case between buzzer's on and off states
-
   SensorData sensor_val = sensor_data_loop();
-  //Serial.println("Temperature: " + sensor_val.temp + " Humidity: " + sensor_val.humid + " Light: " + sensor_val.light); // Uncomment for testing sensor data, comment AWS out
+  //Serial.println("Temperature: " + sensor_val.temp + " Moisture: " + sensor_val.moisture + " Light: " + sensor_val.light); // Uncomment for testing sensor data, comment AWS out
   display_loop(sensor_val);
-  aws_loop("Temperature%20=%20" + sensor_val.temp + ",%20Humidity%20=%20" + sensor_val.humid + ",%20Light%20=%20" + sensor_val.light); // Uncomment for testing AWS
+  aws_loop(aws_loop_msg(sensor_val)); // Uncomment for testing AWS
+  delay(1000);
 }
