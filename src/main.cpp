@@ -11,6 +11,7 @@
 #include "DHT20.h"
 #include <TFT_eSPI.h>
 
+
 #define BUZZER_PIN 15
 #define PHOTORESISTOR_PIN 13
 
@@ -23,12 +24,7 @@ int buzzer_state; // Buzzer state
 unsigned long buzzer_timer; // Buzzer timer
 
 TFT_eSPI ttg = TFT_eSPI(); 
-<<<<<<< HEAD
-Adafruit_CAP1188 cap = Adafruit_CAP1188(CAP1188_CLK, CAP1188_MISO, CAP1188_MOSI, CAP1188_CS, CAP1188_RESET);
 void p1_oled_display(String message);
-=======
-void display_loop(String message);
->>>>>>> 854b4547e875602514a9132f9663ab79c40eace2
 
 // Server details
 const char serverAddress[] = "3.144.71.254"; // adjust with instance
@@ -286,7 +282,6 @@ void buzzerSwitch()
 {
     switch(buzzer_state)
     {
-<<<<<<< HEAD
         case BUZZER_OFF_STATE:
             if (millis() >= buzzer_timer){
                 buzzer_state = BUZZER_ON_STATE;
@@ -295,18 +290,6 @@ void buzzerSwitch()
             buzz(BUZZER_ON_TIME);
             buzzer_timer = millis() + BUZZER_OFF_TIME;
             buzzer_state = BUZZER_OFF_STATE;
-=======
-      case BUZZER_OFF_STATE:
-        if (millis() >= buzzer_timer)
-            buzzer_state = BUZZER_ON_STATE;
-        break;
-      case BUZZER_ON_STATE:
-        Serial.println("Buzzing insects away!");
-        buzz(BUZZER_ON_TIME);
-        buzzer_timer = millis() + BUZZER_OFF_TIME;
-        buzzer_state = BUZZER_OFF_STATE;
-        break;
->>>>>>> 854b4547e875602514a9132f9663ab79c40eace2
     }
 }
 
@@ -316,11 +299,7 @@ void display_setup()
   ttg.setRotation(1);
 }
 
-<<<<<<< HEAD
 void p1_oled_display(String message)
-=======
-void display_loop(String message)
->>>>>>> 854b4547e875602514a9132f9663ab79c40eace2
 {
   if (message == "None")
     return;
@@ -331,6 +310,11 @@ void display_loop(String message)
     ttg.fillScreen(TFT_BLACK);
     ttg.drawString(message, 120, 60, 6);
   
+}
+
+void display_loop(String message)
+{
+  p1_oled_display(message);
 }
 
 void setup() 
@@ -348,11 +332,6 @@ void loop()
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
 
-<<<<<<< HEAD
-  p1_oled_display("message");
-
-=======
->>>>>>> 854b4547e875602514a9132f9663ab79c40eace2
   String send_val = sensor_data_loop();
   if (send_val != "")
   {
