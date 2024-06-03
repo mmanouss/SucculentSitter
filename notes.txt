@@ -12,8 +12,9 @@ Setting up AWS instance:
 
 // 3. vim server.py
 // 4. export FLASK_APP=server.py
+      export FLASK_APP-templates/index.html
 // 5. python3 -m flask run --host=0.0.0.0
-// 6. Type in browser: 18.216.224.146:5000/?var=x where "x" is any value we want to send to the server
+// 6. Type in browser: 3.149.230.7:5000/?var=x where "x" is any value we want to send to the server
 
 FOR PHOTORESISTOR:
 If light is below shade value for several hours in a row during peak sunny hours, tell user to move plant
