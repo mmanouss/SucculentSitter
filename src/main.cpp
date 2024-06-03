@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <HttpClient.h>
 #include <WiFi.h>
 #include <inttypes.h>
@@ -58,7 +59,7 @@ void aws_setup();
 void aws_loop(const String & send_val);
 String aws_loop_msg(SensorData sensor_val);
 
-SensorData temp_Moisture_light();
+SensorData temp_moisture_light();
 void sensor_data_setup();
 SensorData sensor_data_loop();
 
@@ -128,6 +129,19 @@ void aws_setup()
     Serial.println(WiFi.macAddress());
 }
 
+String aws_loop_msg(SensorData sensor_val)
+{
+  if (atoi(sensor_val.moisture.c_str()) >= dry && atoi(sensor_val.light.c_str()) >= shade)
+    return "Temperature: " + sensor_val.temp + ", Moisture: " + sensor_val.moisture + ", Light: " + sensor_val.light;
+  else if (atoi(sensor_val.moisture.c_str()) < dry && atoi(sensor_val.light.c_str()) < shade)
+    return "Temperature: " + sensor_val.temp + ", Moisture (LOW): " + sensor_val.moisture + ", Light (LOW):" + sensor_val.light;
+  else if (atoi(sensor_val.moisture.c_str()) < dry)
+    return "Temperature: " + sensor_val.temp + ", Moisture (LOW): " + sensor_val.moisture + ", Light: " + sensor_val.light;
+  else if (atoi(sensor_val.light.c_str()) < shade)
+    return "Temperature: " + sensor_val.temp + ", Moisture: " + sensor_val.moisture + ", Light (LOW): " + sensor_val.light;
+  return "";
+}
+
 void aws_loop(const String & send_val)
 {
     int err = 0;
@@ -135,67 +149,33 @@ void aws_loop(const String & send_val)
     HttpClient http(c);
     //err = http.get(kHostname, kPath); // UNCOMMENT WHEN TESTING, COMMENT BELOW LINE
 
-    String path = "/?var=" + send_val;
-    err = http.get(serverAddress, serverPort, path.c_str(), NULL);
-    if (err == 0) 
+    StaticJsonDocument<200> doc;
+    doc["send_val"] = send_val;
+    
+    String jsonStr;
+    serializeJson(doc, jsonStr);
+
+    String path = "/submit";
+    http.beginRequest();
+    http.post(serverAddress, serverPort, path.c_str());
+    http.sendHeader("Content-Type", "application/json");
+    http.sendHeader("Content-Length", jsonStr.length());
+
+    http.print(jsonStr);
+    http.endRequest();
+
+    // Handle the response from the server
+    err = http.responseStatusCode();
+    if (err != 200) 
     {
-        Serial.println("startedRequest ok");
-        err = http.responseStatusCode();
-        if (err >= 0) {
-            Serial.print("Got status code: ");
-            Serial.println(err);
-            // Usually you'd check that the response code is 200 or a similar "success" code (200-299) before carrying on,
-            // but we'll print out whatever response we get
-            err = http.skipResponseHeaders();
-            if (err >= 0) 
-            {
-                int bodyLen = http.contentLength();
-                Serial.print("Content length is: ");
-                Serial.println(bodyLen);
-                Serial.println();
-                Serial.println("Body returned follows:");
-                // Now we've got to the body, so we can print it out
-                unsigned long timeoutStart = millis();
-                char c;
-                // Whilst we haven't timed out & haven't reached the end of the body
-                while ((http.connected() || http.available()) && ((millis() - timeoutStart) < kNetworkTimeout)) {
-                    if (http.available()) {
-                        c = http.read();
-                        // Print out this character
-                        Serial.print(c);
-                        bodyLen--;
-                        // We read something, reset the timeout counter
-                        timeoutStart = millis();
-                    } else {
-                        // We haven't got any data, so let's pause to allow some to arrive
-                        delay(kNetworkDelay);
-                    }
-                }
-            } 
-            else 
-            {
-                Serial.print("Failed to skip response headers: ");
-                Serial.println(err);
-            }
-        } 
-        else 
-        {
-            Serial.print("Getting response failed: ");
-            Serial.println(err);
-        }
-    } 
-    else 
-    {
-        Serial.print("Connect failed: ");
+        Serial.print("Got status code: ");
         Serial.println(err);
     }
+
     http.stop();
-    
-    // And just stop, now that we've tried a download
-    // while (1);
 }
 
-SensorData temp_Moisture_light() 
+SensorData temp_moisture_light() 
 {
     float t = DHT.getTemperature();
     float h = DHT.getHumidity();
@@ -217,7 +197,7 @@ void sensor_data_setup()
 
 SensorData sensor_data_loop()
 {
-    SensorData data = temp_Moisture_light();
+    SensorData data = temp_moisture_light();
     if (millis() - DHT.lastRead() >= 1000)
     {
       //  READ DATA
@@ -329,19 +309,6 @@ void display_loop(SensorData sensor_val)
     ttg.drawString("Low Light: " + sensor_val.light, 0, 64, 1);
   else
     ttg.drawString("Light: " + sensor_val.light, 0, 64, 1);
-}
-
-String aws_loop_msg(SensorData sensor_val)
-{
-  if (atoi(sensor_val.moisture.c_str()) >= dry && atoi(sensor_val.light.c_str()) >= shade)
-    return "Temperature%20=%20" + sensor_val.temp + ",%20Moisture%20=%20" + sensor_val.moisture + ",%20Light%20=%20" + sensor_val.light;
-  else if (atoi(sensor_val.moisture.c_str()) < dry && atoi(sensor_val.light.c_str()) < shade)
-    return "Temperature%20=%20" + sensor_val.temp + ",%20Moisture%20(LOW)%20=%20" + sensor_val.moisture + ",%20Light%20(LOW)%20=%20" + sensor_val.light;
-  else if (atoi(sensor_val.moisture.c_str()) < dry)
-    return "Temperature%20=%20" + sensor_val.temp + ",%20Moisture%20(LOW)%20=%20" + sensor_val.moisture + ",%20Light%20=%20" + sensor_val.light;
-  else if (atoi(sensor_val.light.c_str()) < shade)
-    return "Temperature%20=%20" + sensor_val.temp + ",%20Moisture%20=%20" + sensor_val.moisture + ",%20Light%20(LOW)%20=%20" + sensor_val.light;
-  return "";
 }
 
 void setup() 

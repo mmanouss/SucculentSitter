@@ -1,4 +1,4 @@
-aws_setup/ssid_user_and_pass.h
+wifisetup/ssid_user_and_pass.h
 *.pem
 .pio
 .vscode

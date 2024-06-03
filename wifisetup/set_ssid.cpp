@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <HttpClient.h>
 #include <WiFi.h>
+#include <SPI.h>
+#include <FS.h>
+#include "SPIFFS.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include "esp_system.h"
@@ -14,6 +17,8 @@
 void setup() {
     Serial.begin(9600);
     delay(1000);
+    Serial.print("ESP Board MAC Address:  ");
+    Serial.println(WiFi.macAddress());
 
     // Initialize NVS
     esp_err_t err = nvs_flash_init();
