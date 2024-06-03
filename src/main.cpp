@@ -47,6 +47,13 @@ const char kPath[] = "/api/timezone/Europe/London.txt"; // Path to download (thi
 const int kNetworkTimeout = 30 * 1000; // num of ms to wait without receiving any data before we give up
 const int kNetworkDelay = 1000; // num of ms to wait if no data is available before trying again
 
+// Photoresistor mapping
+const int lightMin = 0;
+const int lightMax = 4095;
+
+const int desiredMin = 0;
+const int desiredMax = 100;
+
 // DHT initialization
 DHT20 DHT;
 uint8_t count_var = 0;
@@ -131,14 +138,17 @@ void aws_setup()
 
 String aws_loop_msg(SensorData sensor_val)
 {
+  float f = (sensor_val.temp.toFloat() * 1.8) + 32;
+  int mappedValue = map(atoi(sensor_val.light.c_str()), lightMin, lightMax, desiredMin, desiredMax);
+
   if (atoi(sensor_val.moisture.c_str()) >= dry && atoi(sensor_val.light.c_str()) >= shade)
-    return "Temperature: " + sensor_val.temp + ", Moisture: " + sensor_val.moisture + ", Light: " + sensor_val.light;
+    return "Temperature: " + sensor_val.temp + "°C / " + f + "°F, Moisture: " + sensor_val.moisture + "%, Light: " + String(mappedValue, 2) + "%";
   else if (atoi(sensor_val.moisture.c_str()) < dry && atoi(sensor_val.light.c_str()) < shade)
-    return "Temperature: " + sensor_val.temp + ", Moisture (LOW): " + sensor_val.moisture + ", Light (LOW):" + sensor_val.light;
+    return "Temperature: " + sensor_val.temp + "°C / " + f + "°F, Moisture (LOW): " + sensor_val.moisture + "%, Light (LOW):" + String(mappedValue, 2) + "%";
   else if (atoi(sensor_val.moisture.c_str()) < dry)
-    return "Temperature: " + sensor_val.temp + ", Moisture (LOW): " + sensor_val.moisture + ", Light: " + sensor_val.light;
+    return "Temperature: " + sensor_val.temp + "°C / " + f + "°F, Moisture (LOW): " + sensor_val.moisture + "%, Light: " + String(mappedValue, 2) + "%";
   else if (atoi(sensor_val.light.c_str()) < shade)
-    return "Temperature: " + sensor_val.temp + ", Moisture: " + sensor_val.moisture + ", Light (LOW): " + sensor_val.light;
+    return "Temperature: " + sensor_val.temp + "°C / " + f + "°F, Moisture: " + sensor_val.moisture + "%, Light (LOW): " + String(mappedValue, 2) + "%";
   return "";
 }
 
@@ -291,17 +301,19 @@ void display_loop(SensorData sensor_val)
   ttg.setTextColor(TFT_WHITE);
   ttg.fillScreen(TFT_BLACK);
 
-  ttg.drawString("Temperature: " + sensor_val.temp, 0, 0, 1);
+  ttg.drawString("Temp.: " + sensor_val.temp + "°C", 0, 0, 1);
   
   if (atoi(sensor_val.moisture.c_str()) < dry)
-    ttg.drawString("Low Moisture: " + sensor_val.moisture, 0, 32, 1);
+    ttg.drawString("Low Moist.: " + sensor_val.moisture, 0, 32, 1);
   else
-    ttg.drawString("Moisture: " + sensor_val.moisture, 0, 32, 1);
+    ttg.drawString("Moist.: " + sensor_val.moisture, 0, 32, 1);
   
+  int mappedValue = map(atoi(sensor_val.light.c_str()), lightMin, lightMax, desiredMin, desiredMax);
+
   if (atoi(sensor_val.light.c_str()) < shade)
-    ttg.drawString("Low Light: " + sensor_val.light, 0, 64, 1);
+    ttg.drawString("Low Light: " + String(mappedValue, 2) + "%", 0, 64, 1);
   else
-    ttg.drawString("Light: " + sensor_val.light, 0, 64, 1);
+    ttg.drawString("Light: " + String(mappedValue, 2) + "%", 0, 64, 1);
 }
 
 void setup() 
