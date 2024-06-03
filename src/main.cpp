@@ -319,7 +319,6 @@ void loop()
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
   SensorData sensor_val = sensor_data_loop();
-  //Serial.println("Temperature: " + sensor_val.temp + " Moisture: " + sensor_val.moisture + " Light: " + sensor_val.light); // Uncomment for testing sensor data, comment AWS out
   display_loop(sensor_val);
   aws_loop(aws_loop_msg(sensor_val)); // Uncomment for testing AWS
   delay(1000);
