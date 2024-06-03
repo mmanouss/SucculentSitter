@@ -291,6 +291,11 @@ void buzzerSwitch()
     }
 }
 
+void predictWatering(SensorData sensor_vals) 
+{
+
+}
+
 void display_setup() 
 {
   ttg.init();
@@ -313,11 +318,13 @@ void display_loop(SensorData sensor_val)
 
   ttg.drawString("Temperature: " + sensor_val.temp, 0, 0, 1);
   
-  if (atoi(sensor_val.moisture.c_str()) < dry)
+  // checking moisture levels
+  if (atoi(sensor_val.moisture.c_str()) < dry) 
     ttg.drawString("Low Moisture: " + sensor_val.moisture, 0, 32, 1);
   else
     ttg.drawString("Moisture: " + sensor_val.moisture, 0, 32, 1);
   
+  // checking light levels
   if (atoi(sensor_val.light.c_str()) < shade)
     ttg.drawString("Low Light: " + sensor_val.light, 0, 64, 1);
   else
