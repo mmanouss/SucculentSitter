@@ -11,6 +11,7 @@
 #include "nvs_flash.h"
 #include "DHT20.h"
 #include <TFT_eSPI.h>
+#include "algorithms.h"
 
 #define BUZZER_PIN 15
 #define PHOTORESISTOR_PIN 33
@@ -26,6 +27,11 @@ struct SensorData {
     String moisture;
     String light;
 };
+
+size_t prediction_data_size = 75;
+std::queue<double> humidities;
+std::queue<time> times;
+bool needs_water_in_hour = false;
 
 int buzzer_state; // Buzzer state
 unsigned long buzzer_timer; // Buzzer timer
@@ -271,9 +277,17 @@ void buzzerSwitch()
     }
 }
 
-void predictWatering(SensorData sensor_vals) 
+bool predictWatering(SensorData sensor_vals, time t) 
 {
+  double threshold = 50;
 
+  String str = sensor_vals.moisture;
+  double current_humidity = strtod(str.begin(), nullptr);
+  time an_hour_from_now = t + 3.6e+6;
+  size_t degree = 5;
+  double predicted_humidity = predictHumidity(humidities,times, an_hour_from_now, degree);
+
+  return (predicted_humidity > threshold);
 }
 
 void display_setup() 
@@ -309,6 +323,16 @@ void display_loop(SensorData sensor_val)
     ttg.drawString("Low Light: " + sensor_val.light, 0, 64, 1);
   else
     ttg.drawString("Light: " + sensor_val.light, 0, 64, 1);
+  
+  // predicting next time to water plants
+  if (needs_water_in_hour){
+    // if changing the color causes problems, you can get rid of this
+    // also i don't know if this y value will show up on the screen
+    ttg.setTextColor(TFT_RED);
+    ttg.drawString("Warning: May want to water plant in the next hour", 0, 96, 1);
+    ttg.setTextColor(TFT_WHITE);
+  }
+
 }
 
 void setup() 
@@ -326,7 +350,20 @@ void loop()
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
   SensorData sensor_val = sensor_data_loop();
+  time t = millis();
   //Serial.println("Temperature: " + sensor_val.temp + " Moisture: " + sensor_val.moisture + " Light: " + sensor_val.light); // Uncomment for testing sensor data, comment AWS out
+  
+  if (humidities.size() >= prediction_data_size){
+    // if we have enough data to do the prediction then do it
+    needs_water_in_hour = predictWatering(sensor_val, t);
+  }
+
+  else{
+    // if we don't have enough data to do the prediction then get more
+    humidities.push(strtod(sensor_val.moisture.begin(), nullptr));
+    times.push(millis());
+  }
+
   display_loop(sensor_val);
   aws_loop(aws_loop_msg(sensor_val)); // Uncomment for testing AWS
   delay(1000);
