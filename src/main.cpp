@@ -351,14 +351,14 @@ void display_loop(SensorData sensor_val)
   else
     ttg.drawString("Light: " +  String(mappedValue) + "%", 0, 64, 1);
   
-  // // predicting next time to water plants
-  // if (needs_water_in_hour) {
-  //   // if changing the color causes problems, you can get rid of this
-  //   // also i don't know if this y value will show up on the screen
-  //   ttg.setTextColor(TFT_RED);
-  //   ttg.drawString("Warning: May want to water plant in the next hour", 0, 96, 1);
-  //   ttg.setTextColor(TFT_WHITE);
-  // }
+  // predicting next time to water plants
+  if (needs_water_in_hour) {
+    // if changing the color causes problems, you can get rid of this
+    // also i don't know if this y value will show up on the screen
+    ttg.setTextColor(TFT_RED);
+    ttg.drawString("Warning: May want to water plant in the next hour", 0, 96, 1);
+    ttg.setTextColor(TFT_WHITE);
+  }
 
 }
 
