@@ -7,7 +7,11 @@ sensor_data = []
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    if sensor_data:
+        latest_data = sensor_data[-1]['data']
+    else:
+        latest_data = "No data available"
+    return render_template("index.html", latest_data=latest_data)
 
 @app.route("/submit", methods=["POST"])
 def submit():
