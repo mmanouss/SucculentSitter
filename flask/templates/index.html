@@ -67,35 +67,61 @@
         }
 
         function createChart(ctx, labels, data, label, borderColor) {
-            try {
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: label,
-                            data: data,
-                            borderColor: borderColor,
-                            borderWidth: 1,
-                            fill: false
-                        }]
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: borderColor,
+                        borderWidth: 2, // Increase border width for better visibility
+                        fill: false
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: label, // Use the label as the chart title
+                            font: {
+                                family: 'Verdana, Geneva, sans-serif', // Set font family
+                                size: 16, // Set font size
+                                weight: 'bold' // Set font weight to bold
+                            },
+                            color: '#3f8523' // Set title color
+                        }
                     },
-                    options: {
-                        scales: {
-                            x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'minute'
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'minute'
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Verdana, Geneva, sans-serif', // Set font family for x-axis labels
+                                    size: 12 // Set font size for x-axis labels
+                                }
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: {
+                                    family: 'Verdana, Geneva, sans-serif', // Set font family for y-axis labels
+                                    size: 12 // Set font size for y-axis labels
                                 }
                             }
                         }
+                    },
+                    elements: {
+                        point: {
+                            radius: 0 // Hide data points to keep the focus on the line
+                        }
                     }
-                });
-                console.log(`Chart created for ${label}`);  // Logging chart creation
-            } catch (error) {
-                console.error(`Error creating chart for ${label}:`, error);
-            }
-        }
+                }
+            });
+        }        
 
         async function renderCharts() {
             try {
