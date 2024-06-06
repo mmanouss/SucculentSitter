@@ -153,10 +153,14 @@ void MatVectMul(const size_t m1, const size_t m2, double **A, double *v, double 
    
 }
 
-void PolyFit(unsigned long *x, double *y, const size_t n, const size_t k, const bool fixedinter,
-const double fixedinterval, double *beta, double **Weights, double **XTWXInv) { 
+void PolyFit(std::queue<unsigned long> xq, std::queue<double>yq, const size_t n, const size_t k, const bool fixedinter,
+const double fixedinterval, double *beta, double **Weights, double **XTWXInv){ 
   
     // Definition of variables
+
+    unsigned long * x = queue_to_array(xq);
+    double * y = queue_to_array(yq);
+
     double **X = Make2DArray(n,k+1);           // [n,k+1]
     double **XT;                               // [k+1,n]
     double **XTW;                              // [k+1,n]
@@ -235,7 +239,7 @@ double predictHumidity(std::queue<double> recordedHumidities, std::queue<unsigne
     double **XTWXInv = Make2DArray(k+1,k+1);
     double **Weights = Make2DArray(n,n);
 
-    PolyFit(queue_to_array(recordedTimes), queue_to_array(recordedHumidities), n, k, fixedinter, fixedinterval, coefbeta, Weights, XTWXInv);
+    PolyFit(recordedTimes, recordedHumidities, n, k, fixedinter, fixedinterval, coefbeta, Weights, XTWXInv);
 
     int deg = coefficients.size(); // this is really degree-1
     for (int i=0; i < (int)deg + 1; i++){
