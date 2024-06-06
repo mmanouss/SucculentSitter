@@ -245,7 +245,6 @@ SensorData sensor_data_loop()
           Serial.println("Unknown error");
           break;
       }
-      Serial.print("\n");
   }
   return data;
 }

@@ -10,12 +10,17 @@
             font-family: Verdana, Geneva, sans-serif;
         }
         
+        h2 {
+            color: #3f8523;
+            font-family: Verdana, Geneva, sans-serif;
+        }
+        
         body {
             background-color: #f0ebf2;
         }
         
         p {
-            color: #3f8110;
+            color: #3f8523;
             font-family: Verdana, Geneva, sans-serif;
         }
 
@@ -75,7 +80,7 @@
                         label: label,
                         data: data,
                         borderColor: borderColor,
-                        borderWidth: 2, // Increase border width for better visibility
+                        borderWidth: 2,
                         fill: false
                     }]
                 },
@@ -83,13 +88,8 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: label, // Use the label as the chart title
-                            font: {
-                                family: 'Verdana, Geneva, sans-serif', // Set font family
-                                size: 16, // Set font size
-                                weight: 'bold' // Set font weight to bold
-                            },
-                            color: '#3f8523' // Set title color
+                            text: label,
+                            ...chartTitleStyle // Apply common style to chart titles
                         }
                     },
                     scales: {
@@ -100,47 +100,47 @@
                             },
                             ticks: {
                                 font: {
-                                    family: 'Verdana, Geneva, sans-serif', // Set font family for x-axis labels
-                                    size: 12 // Set font size for x-axis labels
+                                    family: 'Verdana, Geneva, sans-serif',
+                                    size: 12
                                 }
                             }
                         },
                         y: {
                             ticks: {
                                 font: {
-                                    family: 'Verdana, Geneva, sans-serif', // Set font family for y-axis labels
-                                    size: 12 // Set font size for y-axis labels
+                                    family: 'Verdana, Geneva, sans-serif',
+                                    size: 12
                                 }
                             }
                         }
                     },
                     elements: {
                         point: {
-                            radius: 0 // Hide data points to keep the focus on the line
+                            radius: 0
                         }
                     }
                 }
             });
         }        
-
+    
         async function renderCharts() {
             try {
                 const rawData = await fetchData();
                 const parsedData = parseData(rawData);
-
+    
                 const tempCtx = document.getElementById('temperatureChart').getContext('2d');
                 createChart(tempCtx, parsedData.timestamps, parsedData.temps, 'Temperature (°C)', 'rgba(255, 99, 132, 1)');
-
+    
                 const moistureCtx = document.getElementById('moistureChart').getContext('2d');
                 createChart(moistureCtx, parsedData.timestamps, parsedData.moistures, 'Moisture (%)', 'rgba(54, 162, 235, 1)');
-
+    
                 const lightCtx = document.getElementById('lightChart').getContext('2d');
                 createChart(lightCtx, parsedData.timestamps, parsedData.lights, 'Light (%)', 'rgba(255, 206, 86, 1)');
             } catch (error) {
                 console.error('Error rendering charts:', error);
             }
         }
-
+    
         document.addEventListener('DOMContentLoaded', renderCharts);
     </script>
 </body>
