@@ -144,7 +144,7 @@ String aws_loop_msg(SensorData sensor_val)
   if (sensor_val.moisture.toFloat() >= dry && sensor_val.light.toFloat() >= shade)
     return "Temperature: " + sensor_val.temp + "°C / " + f + "°F, Moisture: " + sensor_val.moisture + "%, Light: " + String(mappedValue) + "%";
   else if (sensor_val.moisture.toFloat() < dry && sensor_val.light.toFloat() < shade)
-    return "Temperature: " + sensor_val.temp + "°C / " + f + "°F, Low Moisture: " + sensor_val.moisture + "%, Low Light:" + String(mappedValue) + "%";
+    return "Temperature: " + sensor_val.temp + "°C / " + f + "°F, Low Moisture: " + sensor_val.moisture + "%, Low Light: " + String(mappedValue) + "%";
   else if (sensor_val.moisture.toFloat() < dry)
     return "Temperature: " + sensor_val.temp + "°C / " + f + "°F, Low Moisture: " + sensor_val.moisture + "%, Light: " + String(mappedValue) + "%";
   else if (sensor_val.light.toFloat() < shade)
@@ -316,7 +316,7 @@ void display_loop(SensorData sensor_val)
   // if (needs_water) 
   // {
   //   ttg.setTextColor(TFT_RED);
-  //   ttg.drawString("Water in " + days + "days!", 0, 96, 1);
+  //   ttg.drawString("Watering Countdown: " + days, 0, 96, 1);
   // }
 
 }

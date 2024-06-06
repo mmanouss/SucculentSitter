@@ -15,6 +15,11 @@
             font-family: Verdana, Geneva, sans-serif;
         }
         
+        h3 {
+            color: #3f8523;
+            font-family: Verdana, Geneva, sans-serif;
+        }
+        
         body {
             background-color: #f0ebf2;
         }
@@ -25,25 +30,25 @@
         }
 
         canvas {
-            max-width: 600px;
-            max-height: 400px;
-            margin: 20px auto;
+            max-width: 300px;
+            max-height: 200px;
+            margin: 20px 0;
+            display: block;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
 <body>
     <h1>Succulent 'Sitter</h1>
+    <h2>Most Recent Readings:</h2>
     <p>{{ latest_data }}</p>
 
     <!-- Graph Containers -->
-    <h2>Temperature</h2>
+    <h2>Succulent Statistics:</h2>
     <canvas id="temperatureChart"></canvas>
-    
-    <h2>Moisture</h2>
     <canvas id="moistureChart"></canvas>
-    
-    <h2>Light</h2>
     <canvas id="lightChart"></canvas>
 
     <script>
@@ -61,15 +66,19 @@
         function parseData(data) {
             try {
                 const timestamps = data.map(entry => entry.timestamp);
-                const temps = data.map(entry => parseFloat(entry.data.split(',')[0].split(': ')[1].split(' ')[0]));
+                console.log('Parsed timestamps:', { timestamps });  // Logging parsed data
+                const temps = data.map(entry => parseFloat(entry.data.split(',')[0].split(': ')[1].split('°C')[0]));
+                console.log('Parsed temps:', { temps });
                 const moistures = data.map(entry => parseFloat(entry.data.split(',')[1].split(': ')[1].split('%')[0]));
+                console.log('Parsed moistures:', { moistures });
                 const lights = data.map(entry => parseFloat(entry.data.split(',')[2].split(': ')[1].split('%')[0]));
-                console.log('Parsed data:', { timestamps, temps, moistures, lights });  // Logging parsed data
+                console.log('Parsed lights:', { lights });
                 return { timestamps, temps, moistures, lights };
             } catch (error) {
                 console.error('Error parsing data:', error);
             }
         }
+        
 
         function createChart(ctx, labels, data, label, borderColor) {
             new Chart(ctx, {
@@ -89,7 +98,6 @@
                         title: {
                             display: true,
                             text: label,
-                            ...chartTitleStyle // Apply common style to chart titles
                         }
                     },
                     scales: {
@@ -142,6 +150,14 @@
         }
     
         document.addEventListener('DOMContentLoaded', renderCharts);
+
+        // Function to refresh the page
+        function refreshPage() {
+            location.reload();
+        }
+
+        // Call refreshPage function every 5 seconds (5000 milliseconds)
+        setInterval(refreshPage, 5000);
     </script>
 </body>
 </html>
