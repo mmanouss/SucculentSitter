@@ -1,8 +1,6 @@
 #include "algorithms.h"
 
-
 // Calculates the determinant of a matrix 
-// **************************************************************
 double determinant(double **a, const size_t k) {
     double s = 1;
     double det = 0.;
@@ -36,8 +34,7 @@ double determinant(double **a, const size_t k) {
     return (det);
 }
 
-// Perform the 
-// **************************************************************
+// Perform the transposition
 void transpose(double **num, double **fac, double **inverse, const size_t r) {
     double **b = Make2DArray(r,r);
     double deter;
@@ -58,7 +55,6 @@ void transpose(double **num, double **fac, double **inverse, const size_t r) {
 }
 
 // Calculates the cofactors 
-// **************************************************************
 void cofactor(double **num, double **inverse, const size_t f)
 {
     double **b = Make2DArray(f,f);
@@ -93,7 +89,6 @@ void cofactor(double **num, double **inverse, const size_t f)
 }
 
 // Initialize a 2D array
-// **************************************************************
 double **Make2DArray(const size_t rows, const size_t cols) {
 
     double **array;
@@ -114,7 +109,6 @@ double **Make2DArray(const size_t rows, const size_t cols) {
 }
 
 // Transpose a 2D array
-// **************************************************************
 double **MatTrans(double **array, const size_t rows, const size_t cols) {
 
     double **arrayT = Make2DArray(cols,rows);
@@ -130,7 +124,6 @@ double **MatTrans(double **array, const size_t rows, const size_t cols) {
 }
 
 // Perform the multiplication of matrix A[m1,m2] by B[m2,m3]
-// **************************************************************
 double **MatMul(const size_t m1, const size_t m2, const size_t m3, double **A, double **B) {
 
     double **array = Make2DArray(m1,m3);
@@ -148,7 +141,6 @@ double **MatMul(const size_t m1, const size_t m2, const size_t m3, double **A, d
 }
 
 // Perform the multiplication of matrix A[m1,m2] by vector v[m2,1]
-// **************************************************************
 void MatVectMul(const size_t m1, const size_t m2, double **A, double *v, double *Av) {
 
     
@@ -159,14 +151,12 @@ void MatVectMul(const size_t m1, const size_t m2, double **A, double *v, double 
         } 
     }
    
-
 }
 
 void PolyFit(unsigned long *x, double *y, const size_t n, const size_t k, const bool fixedinter,
 const double fixedinterval, double *beta, double **Weights, double **XTWXInv) { 
   
     // Definition of variables
-    // **************************************************************
     double **X = Make2DArray(n,k+1);           // [n,k+1]
     double **XT;                               // [k+1,n]
     double **XTW;                              // [k+1,n]
@@ -179,7 +169,6 @@ const double fixedinterval, double *beta, double **Weights, double **XTWXInv) {
     if (fixedinter) begin = 1;
 
     // Initialize X
-    // **************************************************************
     for (size_t i=0; i<n; i++) { 
         for (size_t j=begin; j<(k+1); j++) {  // begin
           X[i][j]=pow(x[i],j);  
@@ -187,7 +176,6 @@ const double fixedinterval, double *beta, double **Weights, double **XTWXInv) {
     } 
 
     // Matrix calculations
-    // **************************************************************
     XT = MatTrans(X, n, k+1);                 // Calculate XT
     XTW = MatMul(k+1,n,n,XT,Weights);         // Calculate XT*W
     XTWX = MatMul(k+1,n,k+1,XTW,X);           // Calculate (XTW)*X
@@ -208,18 +196,6 @@ const double fixedinterval, double *beta, double **Weights, double **XTWXInv) {
     MatVectMul(k+1,k+1,XTWXInv,XTWY,beta);    // Calculate beta = (XTWXInv)*XTWY
 
     if (fixedinter) beta[0] = fixedinterval;
-
-    // cout << "Matrix X" << endl;
-    // displayMat(X,n,k+1);
-
-    // cout << "Matrix XT" << endl;
-    // displayMat(XT,k+1,n);
-
-    // cout << "Matrix XTW" << endl;
-    // displayMat(XTW,k+1,n);
-
-    // cout << "Matrix XTWXInv" << endl;
-    // displayMat(XTWXInv,k+1,k+1);
 
 }
 
@@ -258,7 +234,6 @@ double predictHumidity(std::queue<double> recordedHumidities, std::queue<unsigne
     double coefbeta[k+1];                            // Coefficients of the polynomial
     double **XTWXInv = Make2DArray(k+1,k+1);
     double **Weights = Make2DArray(n,n);
-
 
     PolyFit(queue_to_array(recordedTimes), queue_to_array(recordedHumidities), n, k, fixedinter, fixedinterval, coefbeta, Weights, XTWXInv);
 

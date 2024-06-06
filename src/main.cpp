@@ -11,7 +11,7 @@
 #include "nvs_flash.h"
 #include "DHT20.h"
 #include <TFT_eSPI.h>
-#include "algorithms.h"
+// #include "algorithms.h"
 
 #define BUZZER_PIN 15
 #define PHOTORESISTOR_PIN 33
@@ -29,8 +29,8 @@ struct SensorData {
 };
 
 size_t prediction_data_size = 75;
-std::queue<double> humidities;
-std::queue<unsigned long> times;
+// std::queue<double> humidities;
+// std::queue<unsigned long> times;
 bool needs_water_in_hour = false;
 
 int buzzer_state; // Buzzer state
@@ -295,9 +295,9 @@ bool predictWatering(SensorData sensor_vals, unsigned long t)
   double current_humidity = strtod(str.begin(), nullptr);
   unsigned long an_hour_from_now = t + 3.6e+6;
   size_t degree = 5;
-  double predicted_humidity = predictHumidity(humidities, times, an_hour_from_now, degree);
+  // double predicted_humidity = predictHumidity(humidities, times, an_hour_from_now, degree);
 
-  return (predicted_humidity > threshold);
+  // return (predicted_humidity > threshold);
 }
 
 void display_setup() 
@@ -311,8 +311,6 @@ void display_setup()
 
 void display_loop(SensorData sensor_val)
 {
-  char *endptr;
-
   if (sensor_val.temp == "0" && sensor_val.moisture == "0" && sensor_val.light == "0")
     return;
 
@@ -323,31 +321,26 @@ void display_loop(SensorData sensor_val)
   ttg.drawString("Temp.: " + sensor_val.temp + " C", 0, 0, 1);
   
   // checking moisture levels
-  if (atoi(sensor_val.moisture.c_str()) < dry) 
-    ttg.drawString("Low Moisture: " + sensor_val.moisture, 0, 32, 1);
-  if (sensor_val.moisture.toFloat() < dry)
+  if (sensor_val.moisture.toFloat() < dry) 
     ttg.drawString("Low Moist.: " + sensor_val.moisture + "%", 0, 32, 1);
   else
     ttg.drawString("Moist.: " + sensor_val.moisture + "%", 0, 32, 1);
   
-  // checking light levels
-  if (atoi(sensor_val.light.c_str()) < shade)
-    ttg.drawString("Low Light: " + sensor_val.light, 0, 64, 1);
   int mappedValue = map(sensor_val.light.toFloat(), lightMin, lightMax, desiredMin, desiredMax);
 
   if (sensor_val.light.toFloat() < shade)
     ttg.drawString("Low Light: " + String(mappedValue) + "%", 0, 64, 1);
   else
-    ttg.drawString("Light: " + sensor_val.light, 0, 64, 1);
+    ttg.drawString("Light: " +  String(mappedValue) + "%", 0, 64, 1);
   
-  // predicting next time to water plants
-  if (needs_water_in_hour){
-    // if changing the color causes problems, you can get rid of this
-    // also i don't know if this y value will show up on the screen
-    ttg.setTextColor(TFT_RED);
-    ttg.drawString("Warning: May want to water plant in the next hour", 0, 96, 1);
-    ttg.setTextColor(TFT_WHITE);
-  }
+  // // predicting next time to water plants
+  // if (needs_water_in_hour) {
+  //   // if changing the color causes problems, you can get rid of this
+  //   // also i don't know if this y value will show up on the screen
+  //   ttg.setTextColor(TFT_RED);
+  //   ttg.drawString("Warning: May want to water plant in the next hour", 0, 96, 1);
+  //   ttg.setTextColor(TFT_WHITE);
+  // }
 
 }
 
@@ -355,6 +348,7 @@ void setup()
 {
   pinMode(PHOTORESISTOR_PIN, INPUT);
   Serial.begin(9600);
+  delay(1000);
 
   display_setup();
   buzzer_setup();
@@ -366,19 +360,13 @@ void loop()
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
   SensorData sensor_val = sensor_data_loop();
-  unsigned long t = millis();
-  //Serial.println("Temperature: " + sensor_val.temp + " Moisture: " + sensor_val.moisture + " Light: " + sensor_val.light); // Uncomment for testing sensor data, comment AWS out
+  // unsigned long t = millis();
+  Serial.println("Temperature: " + sensor_val.temp + " Moisture: " + sensor_val.moisture + " Light: " + sensor_val.light); // Uncomment for testing sensor data, comment AWS out
   
-  if (humidities.size() >= prediction_data_size){
-    // if we have enough data to do the prediction then do it
-    needs_water_in_hour = predictWatering(sensor_val, t);
-  }
-
-  else{
-    // if we don't have enough data to do the prediction then get more
-    humidities.push(strtod(sensor_val.moisture.begin(), nullptr));
-    times.push(millis());
-  }
+  // if (humidities.size() >= prediction_data_size){
+  //   // if we have enough data to do the prediction then do it
+  //   needs_water_in_hour = predictWatering(sensor_val, t);
+  // }
 
   display_loop(sensor_val);
   aws_loop(aws_loop_msg(sensor_val)); // Uncomment for testing AWS

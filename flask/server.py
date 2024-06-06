@@ -16,9 +16,6 @@ def submit():
     if data and 'send_val' in data:
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         sensor_data.append({'timestamp': timestamp, 'data': data['send_val']})
-        print(f"Received data: {data['send_val']} at {timestamp}")
-    else:
-        print("No 'send_val' found in JSON data")
     return "Data received", 200
 
 @app.route("/data", methods=["GET"])
