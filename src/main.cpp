@@ -30,7 +30,7 @@ struct SensorData {
 
 size_t prediction_data_size = 75;
 std::queue<double> humidities;
-std::queue<time> times;
+std::queue<unsigned long> times;
 bool needs_water_in_hour = false;
 
 int buzzer_state; // Buzzer state
@@ -165,7 +165,7 @@ void aws_loop(const String & send_val)
     HttpClient http(c);
     //err = http.get(kHostname, kPath); // UNCOMMENT WHEN TESTING, COMMENT BELOW LINE
 
-    StaticJsonDocument<200> doc;
+    JsonDocument doc;
     doc["send_val"] = send_val;
     
     String jsonStr;
@@ -287,15 +287,15 @@ void buzzerSwitch()
     }
 }
 
-bool predictWatering(SensorData sensor_vals, time t) 
+bool predictWatering(SensorData sensor_vals, unsigned long t) 
 {
   double threshold = 50;
 
   String str = sensor_vals.moisture;
   double current_humidity = strtod(str.begin(), nullptr);
-  time an_hour_from_now = t + 3.6e+6;
+  unsigned long an_hour_from_now = t + 3.6e+6;
   size_t degree = 5;
-  double predicted_humidity = predictHumidity(humidities,times, an_hour_from_now, degree);
+  double predicted_humidity = predictHumidity(humidities, times, an_hour_from_now, degree);
 
   return (predicted_humidity > threshold);
 }
@@ -366,7 +366,7 @@ void loop()
 {
   buzzerSwitch(); // switch case between buzzer's on and off states
   SensorData sensor_val = sensor_data_loop();
-  time t = millis();
+  unsigned long t = millis();
   //Serial.println("Temperature: " + sensor_val.temp + " Moisture: " + sensor_val.moisture + " Light: " + sensor_val.light); // Uncomment for testing sensor data, comment AWS out
   
   if (humidities.size() >= prediction_data_size){

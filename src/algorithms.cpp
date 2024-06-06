@@ -162,7 +162,7 @@ void MatVectMul(const size_t m1, const size_t m2, double **A, double *v, double 
 
 }
 
-void PolyFit(time *x, double *y, const size_t n, const size_t k, const bool fixedinter,
+void PolyFit(unsigned long *x, double *y, const size_t n, const size_t k, const bool fixedinter,
 const double fixedinterval, double *beta, double **Weights, double **XTWXInv) { 
   
     // Definition of variables
@@ -233,9 +233,9 @@ double * queue_to_array(std::queue<double> q) {
     return array;
 }
 
-time * queue_to_array(std::queue<time> q) {
+unsigned long * queue_to_array(std::queue<unsigned long> q) {
     size_t q_size = q.size();
-    time *array = new time [q_size];
+    unsigned long *array = new unsigned long [q_size];
     for (int i=0; i < q_size; i++){
         array[i] = q.front();
         q.pop();
@@ -243,10 +243,10 @@ time * queue_to_array(std::queue<time> q) {
     return array;
 }
 
-double predictHumidity(std::queue<double> recordedHumidities, std::queue<time> recordedTimes, time t, size_t degree) {
+double predictHumidity(std::queue<double> recordedHumidities, std::queue<unsigned long> recordedTimes, unsigned long t, size_t degree) {
     // takes last N recorded times produces a polynomial regression 
     double hypothesizedHumidity = 0.0;
-    time millis();
+    unsigned long millis();
 
     std::vector<double> coefficients;
     
@@ -262,8 +262,8 @@ double predictHumidity(std::queue<double> recordedHumidities, std::queue<time> r
 
     PolyFit(queue_to_array(recordedTimes), queue_to_array(recordedHumidities), n, k, fixedinter, fixedinterval, coefbeta, Weights, XTWXInv);
 
-    int degree = coefficients.size(); // this is really degree-1
-    for (int i=0; i < (int)degree + 1; i++){
+    int deg = coefficients.size(); // this is really degree-1
+    for (int i=0; i < (int)deg + 1; i++){
         hypothesizedHumidity += coefficients[i] * (pow((double)t, i)); // calculate results of plugging in t value to poly function
     }
 

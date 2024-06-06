@@ -1,6 +1,5 @@
 wifisetup/ssid_user_and_pass.h
 *.pem
-.pio
-.vscode
-.venv
+.pio/
+.vscode/
 *.code-workspace
