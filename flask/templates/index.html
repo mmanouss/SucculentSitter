@@ -19,12 +19,87 @@
             color: #3f8110;
             font-family: Verdana, Geneva, sans-serif;
         }
+
+        canvas {
+            max-width: 600px;
+            max-height: 400px;
+            margin: 20px auto;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
     <h1>Succulent 'Sitter</h1>
     <p>{{ data.get('send_val', 'No data available') }}</p>
+
+    <!-- Graph Containers -->
+    <h2>Temperature</h2>
+    <canvas id="temperatureChart"></canvas>
+    
+    <h2>Moisture</h2>
+    <canvas id="moistureChart"></canvas>
+    
+    <h2>Light</h2>
+    <canvas id="lightChart"></canvas>
+
+    <script>
+        async function fetchData() {
+            const response = await fetch('/data');
+            const data = await response.json();
+            return data;
+        }
+
+        function parseData(data) {
+            const timestamps = data.map(entry => entry.timestamp);
+            const temps = data.map(entry => parseFloat(entry.data.split('---')[0].split(': ')[1].split(' ')[0]));
+            const moistures = data.map(entry => parseFloat(entry.data.split('---')[1].split(': ')[1].split('%')[0]));
+            const lights = data.map(entry => parseFloat(entry.data.split('---')[2].split(': ')[1].split('%')[0]));
+            return { timestamps, temps, moistures, lights };
+        }
+
+        function createChart(ctx, labels, data, label, borderColor) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: borderColor,
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'minute'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function renderCharts() {
+            const rawData = await fetchData();
+            const parsedData = parseData(rawData);
+
+            const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+            createChart(tempCtx, parsedData.timestamps, parsedData.temps, 'Temperature (°C)', 'rgba(255, 99, 132, 1)');
+
+            const moistureCtx = document.getElementById('moistureChart').getContext('2d');
+            createChart(moistureCtx, parsedData.timestamps, parsedData.moistures, 'Moisture (%)', 'rgba(54, 162, 235, 1)');
+
+            const lightCtx = document.getElementById('lightChart').getContext('2d');
+            createChart(lightCtx, parsedData.timestamps, parsedData.lights, 'Light (%)', 'rgba(255, 206, 86, 1)');
+        }
+
+        document.addEventListener('DOMContentLoaded', renderCharts);
+    </script>
 </body>
 
 </html>
