@@ -11,6 +11,7 @@
 #include "nvs_flash.h"
 #include "DHT20.h"
 #include <TFT_eSPI.h>
+#include <vector>
 
 #define BUZZER_PIN 15
 #define PHOTORESISTOR_PIN 33
@@ -20,6 +21,16 @@
 #define BUZZER_ON_STATE 1
 #define BUZZER_OFF_TIME 1800000 // 30min * 60s/min = 1800s * 1000ms/s = 1800000ms
 #define BUZZER_ON_TIME 10000 // 10s * 1000ms/s = 10000ms
+
+std::vector<unsigned long> dryingPeriods;
+size_t PERIODS_STORED; // 5 for demo, 20 for real application (enought to calibrate drying times)
+float days_till_watering;
+unsigned long millis_till_watering;
+unsigned long last_time_watered;
+unsigned long loop_begin_time;
+unsigned long loop_end_time;
+bool calculating_loop_time;
+bool predicted;
 
 struct SensorData {
     String temp;
@@ -289,7 +300,7 @@ void display_setup()
   ttg.fillScreen(TFT_BLACK);
 }
 
-void display_loop(SensorData sensor_val)
+void display_loop(SensorData sensor_val, bool predicted)
 {
   if (sensor_val.temp == "0" && sensor_val.moisture == "0" && sensor_val.light == "0")
     return;
@@ -313,12 +324,48 @@ void display_loop(SensorData sensor_val)
   else
     ttg.drawString("Light: " +  String(mappedValue) + "%", 0, 64, 1);
   
-  // if (needs_water) 
-  // {
-  //   ttg.setTextColor(TFT_RED);
-  //   ttg.drawString("Watering Countdown: " + days, 0, 96, 1);
-  // }
+  if (predicted) 
+  // if there are even any calculations to be made
+  {
+    ttg.drawString("Watering Countdown: " + String(days_till_watering), 0, 96, 1);
+  }
 
+}
+
+unsigned long avg(std::vector<unsigned long> time_periods){
+  unsigned long sum = 0;
+  int len = (int)time_periods.size();
+  for (int i=0; i < len; i++)
+    sum += time_periods[i];
+  return sum / (unsigned long)len;
+}
+
+float millisToDays(unsigned long mills) {
+  return mills * (1/8.64e+7);
+}
+
+unsigned long predictMillisTillWateringLoop(SensorData sensor_vals){
+  // returns average periods of time it takes for the plant to need watering
+  if (sensor_vals.moisture.toFloat() < dry) {
+    if (dryingPeriods.size() >= PERIODS_STORED)
+      dryingPeriods.erase(dryingPeriods.begin()); // remove least recent drying period
+    dryingPeriods.push_back(millis()-last_time_watered); // add most recent drying period
+    // last time watered will be initialized as the time at setup (assuming plant starts "watered" for countown)
+  }
+  if (!dryingPeriods.empty()){
+    // if there are values, we can find an average
+    return avg(dryingPeriods); // average current drying periods in millis() 
+  } else return 0.0;
+  // if there are no values yet, we will keep predicted time 0.0
+}
+
+void predictMillisTillWateringSetup(){
+  PERIODS_STORED = 5; // 5 for demo, 20 for real application (enought to calibrate drying times)
+  days_till_watering = 0.0;
+  millis_till_watering = 0.0;
+  last_time_watered = millis();
+  calculating_loop_time = true;
+  predicted = false;
 }
 
 void setup() 
@@ -331,15 +378,49 @@ void setup()
   buzzer_setup();
   sensor_data_setup();
   aws_setup(); // Uncomment for testing AWS
+  predictMillisTillWateringSetup();
+}
+
+bool watered(float moisture){
+  if (moisture == 100){
+    // 100% is the RH of a watered/well hydrated plant
+    // because it will be at 100% for some time, the coundown will continue changing until the rh finally goes below 100%
+    last_time_watered = millis(); // set last time watered to millis()
+    return true; // return true
+  } 
+  return false;
 }
 
 void loop() 
 {
+  if ((calculating_loop_time) && (predicted)){
+    loop_begin_time = millis(); // should only do this once
+  }
   buzzerSwitch(); // switch case between buzzer's on and off states
   SensorData sensor_val = sensor_data_loop();
   //Serial.println("Temperature: " + sensor_val.temp + " Moisture: " + sensor_val.moisture + " Light: " + sensor_val.light); // Uncomment for testing sensor data, comment AWS out
+  if (watered(sensor_val.moisture.toFloat())){
+    // watered function updates last_time_watered which is used in predicting function
+    millis_till_watering = predictMillisTillWateringLoop(sensor_val);
+    days_till_watering = millisToDays(millis_till_watering);
+    predicted = true;
+  }
 
-  display_loop(sensor_val);
+  display_loop(sensor_val, predicted);
+
+  // DECREMENTING COUNTDOWN
+  if ((predicted) && (days_till_watering != 0) && (!calculating_loop_time)){
+    // if we have a predicted value, the countdown isn't done yet, and the duration of the loop has been calculated
+    millis_till_watering = millis_till_watering - (loop_end_time - loop_begin_time); // decrement count_down by loop_time
+    days_till_watering = millisToDays(millis_till_watering);
+  }
+
   aws_loop(aws_loop_msg(sensor_val)); // Uncomment for testing AWS
   delay(1000);
+
+  // CALCULATING DURATION OF LOOP, SO EACH ITERATION CAN DECREMENT TIMER
+  if ((calculating_loop_time) && (predicted)){
+    loop_end_time = millis(); // should only do this once
+    calculating_loop_time = false;
+  }
 }
