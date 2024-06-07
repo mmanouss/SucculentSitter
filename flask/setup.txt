@@ -1,0 +1,16 @@
+Setting up AWS instance:
+
+// 1. start AWS instance in the webpage
+// 2. copy ssh line from the webpage and start it after replacing serverAddress with IP
+
+// sudo apt update
+// sudo apt install pip
+// sudo apt install python3.12-venv
+// python3 -m venv venv
+// . venv/bin/activate
+// pip install Flask
+
+// 3. vim server.py, vim templates/index.html
+// 4. export FLASK_APP=server.py
+// 5. python3 -m flask run --host=0.0.0.0
+// 6. Type in browser: 3.149.230.7:5000/

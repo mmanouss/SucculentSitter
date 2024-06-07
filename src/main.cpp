@@ -324,11 +324,11 @@ void display_loop(SensorData sensor_val, bool predicted)
   else
     ttg.drawString("Light: " +  String(mappedValue) + "%", 0, 64, 1);
   
+  ttg.setTextColor(TFT_RED);
   if (predicted) 
-  // if there are even any calculations to be made
-  {
-    ttg.drawString("Watering Countdown: " + String(days_till_watering), 0, 96, 1);
-  }
+    ttg.drawString("Countdown: " + String(days_till_watering), 0, 96, 1);
+  else
+    ttg.drawString("Getting water data...", 0, 96, 1);
 
 }
 
